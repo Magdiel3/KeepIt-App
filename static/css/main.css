@@ -104,15 +104,15 @@ textarea:focus, input:focus {
 }
 
 
-input::-webkit-input-placeholder { color: #43383e;}
-input:-moz-placeholder { color: #43383e;}
-input::-moz-placeholder { color: #43383e;}
-input:-ms-input-placeholder { color: #43383e;}
+input::-webkit-input-placeholder { color: #a09393aa;}
+input:-moz-placeholder { color: #a09393aa;}
+input::-moz-placeholder { color: #a09393aa;}
+input:-ms-input-placeholder { color: #a09393aa;}
 
-textarea::-webkit-input-placeholder { color: #43383e;}
-textarea:-moz-placeholder { color: #43383e;}
-textarea::-moz-placeholder { color: #43383e;}
-textarea:-ms-input-placeholder { color: #43383e;}
+textarea::-webkit-input-placeholder { color: #a09393aa;}
+textarea:-moz-placeholder { color: #a09393aa;}
+textarea::-moz-placeholder { color: #a09393aa;}
+textarea:-ms-input-placeholder { color: #a09393aa;}
 
 /*---------------------------------------------*/
 button {
@@ -204,7 +204,17 @@ iframe {
 
 .login100-form-title {
   font-family: Oswald-Medium;
-  font-size: 30px;
+  font-size: 35px;
+  color: #43383e;
+  line-height: 1.2;
+  text-align: center;
+
+  display: block;
+}
+
+.login100-form-subtitle {
+  font-family: Oswald-Medium;
+  font-size: 25px;
   color: #43383e;
   line-height: 1.2;
   text-align: center;

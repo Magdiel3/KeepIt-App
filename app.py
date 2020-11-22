@@ -1,4 +1,6 @@
 from datetime import datetime
+from time import strftime
+import os
 
 from flask import Flask, render_template, request, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
@@ -6,6 +8,12 @@ from flask_socketio import SocketIO, join_room, leave_room
 from pymongo.errors import DuplicateKeyError
 
 from db import save_user, get_user, get_box, save_box
+
+heroku_env = os.getenv("HEROKU_ENV_SELECTED")
+
+server = 'https://keepit-remote.herokuapp.com/' if heroku_env else 'http://127.0.0.1:5000/'
+
+
 
 # Setup app with web socket and Login Handler
 app = Flask(__name__)
@@ -18,7 +26,7 @@ login_manager.init_app(app)
 # Splash screen
 @app.route('/')
 def home():
-    return render_template("index.html")
+    return render_template("index.html", server=server)
 
 # Login screen
 @app.route('/login', methods=['GET','POST'])
@@ -31,7 +39,7 @@ def login():
         user = get_user(username)
 
         if user and user.check_password(password_input):
-            succes_message = " did " if user.check_password(password_input) else ""
+            succes_message = " not " if user.check_password(password_input) else ""
             app.logger.info(
                 f"{username} tried with {password_input} and did{succes_message}succeed.")
             login_user(user)
@@ -43,7 +51,7 @@ def login():
                 app.logger.info("User not registered")
             message = "Username or Password incorrect"
 
-    return render_template('login.html', message = message)
+    return render_template('login.html', message = message, server=server)
 
 # Logout
 @app.route("/logout/")
@@ -78,19 +86,39 @@ def signup():
                 app.logger.info("Box already in use")
                 message = "Box name already registered."
 
-    return render_template('signup.html', message = message)
+    return render_template('signup.html', message = message, server=server)
 
 # User screen
 @app.route('/box')
 @login_required
 def box_overview():
+    app.logger.info(f"/box on {server}")
     username = current_user.username
     box_name = current_user.box_name
 
+    # Date and time string
+    date_time = strftime('%H:%M')
+
     if username and box_name:
-        return render_template("box.html",username=username, box_name=box_name)
+        return render_template("box.html", username=username, box_name=box_name, events_registered=[], server=server)
     else:
+        app.logger.info(f"{username} was redirected to home after trying {box_name}.")
         return redirect(url_for("home"))
+
+# Box register event
+@app.route('/register_event', methods=['POST'])
+@login_required
+def register_event():
+    data = request.get_json(force=True)
+
+    app.logger.info(data)
+    app.logger.info(f"/register_event on {server}")
+
+    if data.get('action') is None or data.get('date') is None:
+        return jsonify({'message': 'Bad request'}), 400
+
+    socketio.emit('receive_event', data=data)
+    return "Event sent"
 
 @socketio.on('join_room')
 def handle_join_event(data):
