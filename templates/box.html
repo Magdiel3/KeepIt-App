@@ -87,6 +87,9 @@
 		socket.on('receive_event/{{ box_name }}', (data) => {
 			console.log(data);
 			const newNode = document.createElement('div');
+			if (data.action == "Alarm") {
+				newNode.style.cssText = "color:red;";
+			}
 			newNode.innerHTML = `<b>${data.action}&nbsp;[${data.date}]:&nbsp;</b> ${data.message}`;
 			document.getElementById('events_registered').appendChild(newNode);
 		});
