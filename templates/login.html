@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>Login V7</title>
+	<title>Login - KeepIt</title>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 <!--===============================================================================================-->	
@@ -32,19 +32,19 @@
 	<div class="limiter">
 		<div class="container-login100">
 			<div class="wrap-login100 p-t-90 p-b-30">
-				<form class="login100-form validate-form">
+				<form class="login100-form validate-form" method="POST" action="/login">
 					<span class="login100-form-title p-b-40">
 						KeepIt
 					</span>
 
 					<div class="text-center p-t-55 p-b-30">
 						<span class="txt1">
-							Login with email
+							{% if message %}Wrong Username or Password{% else %}Login{% endif %}
 						</span>
 					</div>
 
-					<div class="wrap-input100 validate-input m-b-16" data-validate="Please enter email: ex@abc.xyz">
-						<input class="input100" type="text" name="email" placeholder="Email">
+					<div class="wrap-input100 validate-input m-b-16" data-validate="Please enter yout username">
+						<input class="input100" type="text" name="username" placeholder="Username">
 						<span class="focus-input100"></span>
 					</div>
 
@@ -52,7 +52,7 @@
 						<span class="btn-show-pass">
 							<i class="fa fa fa-eye"></i>
 						</span>
-						<input class="input100" type="password" name="pass" placeholder="Password">
+						<input class="input100" type="password" name="password" placeholder="Password">
 						<span class="focus-input100"></span>
 					</div>
 
