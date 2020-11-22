@@ -5,6 +5,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify, abort
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_socketio import SocketIO, send, emit
+from flask_qrcode import QRcode
 from pymongo.errors import DuplicateKeyError
 
 from db import save_user, get_user, get_box, save_box, is_box_owner
@@ -16,6 +17,7 @@ socketio = SocketIO(app)
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
+qrcode = QRcode(app)
 
 # Splash screen
 @app.route('/')
@@ -108,6 +110,28 @@ def box_overview(box_name_url):
                 'box_owned': box_name,
                 'box_tried': box_name_url
             })
+
+
+# User QR key
+@app.route('/box/<box_name_url>/access_key/')
+@login_required
+def show_qr_key(box_name_url):
+    app.logger.info(f"{current_user.username} retrieving key for {box_name_url}")
+    user_box = current_user.box_name
+
+    if box_name_url and is_box_owner(current_user.username,box_name_url):
+        app.logger.info(f"{current_user.username} has secceufully retrieved {current_user.box_name} key")
+        return render_template("qr_code.html", username=current_user.username,
+                                box_name=current_user.box_name, box_key=f"bosname:{current_user.box_name}")
+    else:
+        app.logger.info(f"{current_user.username} is not owner of {box_name_url}")
+        abort(403, description="Acces denied")
+        return jsonify({
+                'message': 'Acces Denied',
+                'box_owned': box_name,
+                'box_tried': box_name_url
+            })
+
 
 # Box register event
 @app.route('/register_event/', methods=['POST'])
