@@ -5,7 +5,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from flask_socketio import SocketIO, join_room, leave_room
 from pymongo.errors import DuplicateKeyError
 
-from db import save_user, get_user
+from db import save_user, get_user, get_box, save_box
 
 # Setup app with web socket and Login Handler
 app = Flask(__name__)
@@ -31,7 +31,7 @@ def login():
         user = get_user(username)
 
         if user and user.check_password(password_input):
-            succes_message = user.check_password(password_input)
+            succes_message = " did " if user.check_password(password_input) else ""
             app.logger.info(
                 f"{username} tried with {password_input} and did{succes_message}succeed.")
             login_user(user)
@@ -51,6 +51,34 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('home'))
+
+# Login screen
+@app.route('/signup', methods=['GET','POST'])
+def signup():
+    message = ''
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password_input = request.form.get('password')
+        email_input = request.form.get('email')
+        box_name_input = request.form.get('box_name')
+
+        user = save_user(username,email_input,password_input,box_name_input)
+    
+        if user:
+            save_box(box_name_input)
+            app.logger.info(
+                f"{username} added with box {box_name_input} linked to its account.")
+            login_user(user)
+            return redirect(url_for('box_overview'))
+        else:
+            if not get_box(box_name_input): 
+                app.logger.info(f"{username} already used")
+                message = "Username already exist, please try with another one."
+            else:
+                app.logger.info("Box already in use")
+                message = "Box name already registered."
+
+    return render_template('signup.html', message = message)
 
 # User screen
 @app.route('/box')

@@ -7,6 +7,10 @@ from werkzeug.security import generate_password_hash
 
 from user import User
 
+import logging
+
+log = logging.getLogger()
+
 mongodb_password = os.getenv("MONGODB_PASSWORD")
 
 client = MongoClient(f"mongodb+srv://magdiel3:{mongodb_password}@keepit.jca02.mongodb.net/test?retryWrites=true&w=majority")
@@ -16,9 +20,21 @@ users_collection = boxes_db.get_collection("users")
 boxes_collection = boxes_db.get_collection("boxes")
 
 # User adition
-def save_user(username, email, password):
+def save_user(username, email, password, box_name):
     password_hash = generate_password_hash(password)
-    users_collection.insert_one({'_id': username, 'email': email, 'password': password_hash})
+
+    if username and email and password and box_name:
+        box_used = boxes_collection.find_one({"_id": box_name})
+        if not box_used:
+            try:
+                # save_box(box_name)
+                users_collection.insert_one({'_id': username, 'email': email, 'password': password_hash, 'box_name': box_name})
+                return get_user(username)
+            except:
+                print("User insertion failed")
+    else:
+        print("User creation without valid arguments") 
+    return None
 
 def get_user(username):
     user_data = users_collection.find_one({'_id': username})
@@ -43,7 +59,7 @@ def get_user_box(username):
 
 if __name__ == "__main__":
     try:
-        save_user("test","test@test.com","test")
+        save_user("test2","test@test.com","test","TestBox")
     except:
         print("Already existed")
 
