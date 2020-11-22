@@ -122,7 +122,7 @@ def show_qr_key(box_name_url):
     if box_name_url and is_box_owner(current_user.username,box_name_url):
         app.logger.info(f"{current_user.username} has secceufully retrieved {current_user.box_name} key")
         return render_template("qr_code.html", username=current_user.username,
-                                box_name=current_user.box_name, box_key=f"bosname:{current_user.box_name}")
+                                box_name=current_user.box_name, box_key=f"boxname:{current_user.box_name}")
     else:
         app.logger.info(f"{current_user.username} is not owner of {box_name_url}")
         abort(403, description="Acces denied")
