@@ -13,8 +13,6 @@ heroku_env = os.getenv("HEROKU_ENV_SELECTED")
 
 server = 'https://keepit-remote.herokuapp.com/' if heroku_env else 'http://127.0.0.1:5000/'
 
-
-
 # Setup app with web socket and Login Handler
 app = Flask(__name__)
 app.secret_key = "KeepItSecret"
