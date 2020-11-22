@@ -64,9 +64,10 @@
 	</div>
 
 <!--===============================================================================================-->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script> 
 	<script>
-		const socket = io.connect("http://127.0.0.1:5000");
+		var socket = io()
+		// const socket = io.connect("http://127.0.0.1:5000");
 		socket.on('connect',function() {
 			socket.emit('join_room', {
 				username: '{{ username }}',
@@ -75,7 +76,7 @@
 			console.log('connect');
 		});
 
-		socket.on('receive_event', function (data) {
+		socket.on('receive_event', (data) => {
 			console.log(data);
 			const newNode = document.createElement('div');
 			newNode.innerHTML = `<b>${data.action}&nbsp;[${data.date}]:&nbsp;</b> ${data.message}`;

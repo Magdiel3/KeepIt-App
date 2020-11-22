@@ -4,7 +4,7 @@ import os
 
 from flask import Flask, render_template, request, redirect, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from flask_socketio import SocketIO, join_room, leave_room
+from flask_socketio import SocketIO, send, emit
 from pymongo.errors import DuplicateKeyError
 
 from db import save_user, get_user, get_box, save_box
@@ -117,7 +117,7 @@ def register_event():
     if data.get('action') is None or data.get('date') is None:
         return jsonify({'message': 'Bad request'}), 400
 
-    socketio.emit('receive_event', data=data)
+    emit('receive_event', data=data, broadcast=True)
     return "Event sent"
 
 @socketio.on('join_room')
@@ -129,4 +129,4 @@ def load_user(username):
     return get_user(username)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)
