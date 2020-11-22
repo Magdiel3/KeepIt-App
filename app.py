@@ -129,4 +129,5 @@ def load_user(username):
     return get_user(username)
 
 if __name__ == '__main__':
+    import argparse
     socketio.run(app, debug=True)
