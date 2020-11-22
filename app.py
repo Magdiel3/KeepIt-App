@@ -135,7 +135,6 @@ def show_qr_key(box_name_url):
 
 # Box register event
 @app.route('/register_event/', methods=['POST'])
-@login_required
 def register_event():
     data = request.get_json(force=True)
 
