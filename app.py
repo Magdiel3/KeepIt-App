@@ -31,9 +31,16 @@ def login():
         user = get_user(username)
 
         if user and user.check_password(password_input):
+            succes_message = user.check_password(password_input)
+            app.logger.info(
+                f"{username} tried with {password_input} and did{succes_message}succeed.")
             login_user(user)
-            return redirect(url_for('home'))
+            return redirect(url_for('box_overview'))
         else:
+            if user: 
+                app.logger.info("Failed password")
+            else:
+                app.logger.info("User not registered")
             message = "Username or Password incorrect"
 
     return render_template('login.html', message = message)
@@ -47,14 +54,19 @@ def logout():
 
 # User screen
 @app.route('/box')
-def overview():
-    username = request.args.get("username")
-    password = request.args.get("box_id")
-    
-    if username and password:
-        return render_template("home.thml",username=username, password=password)
+@login_required
+def box_overview():
+    username = current_user.username
+    box_name = current_user.box_name
+
+    if username and box_name:
+        return render_template("box.html",username=username, box_name=box_name)
     else:
-        return redirect(url_for("/"))
+        return redirect(url_for("home"))
+
+@socketio.on('join_room')
+def handle_join_event(data):
+    app.logger.info(f"{data['username']} has joined box {data['box_name']}")
 
 @login_manager.user_loader
 def load_user(username):
