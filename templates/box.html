@@ -76,7 +76,7 @@
 			console.log('connect');
 		});
 
-		socket.on('receive_event', (data) => {
+		socket.on('receive_event/{{ box_name }}', (data) => {
 			console.log(data);
 			const newNode = document.createElement('div');
 			newNode.innerHTML = `<b>${data.action}&nbsp;[${data.date}]:&nbsp;</b> ${data.message}`;

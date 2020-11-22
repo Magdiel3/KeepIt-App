@@ -57,6 +57,10 @@ def get_user_box(username):
         box = boxes_collection.find_one({'_id': box_name})
     return box
 
+# Validate Box
+def is_box_owner(username,box_name):
+    return users_collection.find_one({"_id":username}).get('box_name','') == box_name
+
 if __name__ == "__main__":
     try:
         save_user("test2","test@test.com","test","TestBox")

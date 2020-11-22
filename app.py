@@ -2,18 +2,12 @@ from datetime import datetime
 from time import strftime
 import os
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify, abort
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_socketio import SocketIO, send, emit
 from pymongo.errors import DuplicateKeyError
 
-from db import save_user, get_user, get_box, save_box
-
-heroku_env = os.getenv("HEROKU_ENV_SELECTED")
-
-server = 'https://keepit-remote.herokuapp.com/' if heroku_env else 'http://127.0.0.1:5000/'
-
-
+from db import save_user, get_user, get_box, save_box, is_box_owner
 
 # Setup app with web socket and Login Handler
 app = Flask(__name__)
@@ -26,12 +20,16 @@ login_manager.init_app(app)
 # Splash screen
 @app.route('/')
 def home():
-    return render_template("index.html", server=server)
+    return render_template("index.html")
 
 # Login screen
 @app.route('/login', methods=['GET','POST'])
 def login():
     message = ''
+
+    if current_user.is_authenticated:
+        return redirect(f"box/{current_user.box_name}/")
+
     if request.method == 'POST':
         username = request.form.get('username')
         password_input = request.form.get('password')
@@ -43,7 +41,7 @@ def login():
             app.logger.info(
                 f"{username} tried with {password_input} and did{succes_message}succeed.")
             login_user(user)
-            return redirect(url_for('box_overview'))
+            return redirect(f"/box/{user.box_name}/")
         else:
             if user: 
                 app.logger.info("Failed password")
@@ -51,7 +49,7 @@ def login():
                 app.logger.info("User not registered")
             message = "Username or Password incorrect"
 
-    return render_template('login.html', message = message, server=server)
+    return render_template('login.html', message = message)
 
 # Logout
 @app.route("/logout/")
@@ -77,7 +75,7 @@ def signup():
             app.logger.info(
                 f"{username} added with box {box_name_input} linked to its account.")
             login_user(user)
-            return redirect(url_for('box_overview'))
+            return redirect(f"box/{user.box_name}/")
         else:
             if not get_box(box_name_input): 
                 app.logger.info(f"{username} already used")
@@ -86,39 +84,49 @@ def signup():
                 app.logger.info("Box already in use")
                 message = "Box name already registered."
 
-    return render_template('signup.html', message = message, server=server)
+    return render_template('signup.html', message = message)
 
 # User screen
-@app.route('/box')
+@app.route('/box/<box_name_url>/')
 @login_required
-def box_overview():
-    app.logger.info(f"/box on {server}")
+def box_overview(box_name_url):
+    app.logger.info(f"/box/{box_name_url}")
     username = current_user.username
     box_name = current_user.box_name
 
     # Date and time string
     date_time = strftime('%H:%M')
 
-    if username and box_name:
-        return render_template("box.html", username=username, box_name=box_name, events_registered=[], server=server)
+    if username and is_box_owner(username,box_name_url):
+        return render_template("box.html", username=username, box_name=box_name, events_registered=[], 
+                        )
     else:
         app.logger.info(f"{username} was redirected to home after trying {box_name}.")
-        return redirect(url_for("home"))
+        abort(403, description="Acces denied")
+        return jsonify({
+                'message': 'Acces Denied',
+                'box_owned': box_name,
+                'box_tried': box_name_url
+            })
 
 # Box register event
-@app.route('/register_event', methods=['POST'])
+@app.route('/register_event/', methods=['POST'])
 @login_required
 def register_event():
     data = request.get_json(force=True)
 
     app.logger.info(data)
-    app.logger.info(f"/register_event on {server}")
+    box_name = data.get('box_name','')
 
-    if data.get('action') is None or data.get('date') is None:
+    if data.get('action') is None or data.get('date') is None or box_name is None:
         return jsonify({'message': 'Bad request'}), 400
 
-    socketio.emit('receive_event', data=data, broadcast=True)
-    return "Event sent"
+    if get_box(box_name):
+        socketio.emit(f'receive_event/{box_name}', data=data, box_name=data.get('box_name'))
+        return f"Event sent to {box_name}"
+    else:
+        app.logger.info(f"Box {box_name} was not found")
+        return "Box not found"
 
 @socketio.on('join_room')
 def handle_join_event(data):
