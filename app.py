@@ -117,7 +117,7 @@ def register_event():
     if data.get('action') is None or data.get('date') is None:
         return jsonify({'message': 'Bad request'}), 400
 
-    emit('receive_event', data=data, broadcast=True)
+    socketio.emit('receive_event', data=data, broadcast=True)
     return "Event sent"
 
 @socketio.on('join_room')
